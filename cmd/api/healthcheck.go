@@ -1,12 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 )
 
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Status: available")
-	fmt.Fprintf(w, "enviroment: %s\n", app.config.env)
-	fmt.Fprintf(w, "version: %s\n", version)
+	data := map[string]string{
+		"status":     "available",
+		"enviroment": app.config.env,
+		"version":    version,
+	}
+
+	err := app.writeJSON(w, http.StatusOK, data, nil)
+	if err != nil {
+		app.logger.Println(err)
+		http.Error(w, "The server encountered a problem and could not process your Request",
+			http.StatusInternalServerError,
+		)
+	}
 }
