@@ -7,6 +7,8 @@ import (
 	"strconv"
 )
 
+type envelope map[string]interface{}
+
 func (app *application) readIDParam(r *http.Request) (int64, error) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil || id < 1 {
@@ -18,10 +20,10 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 func (app *application) writeJSON(
 	w http.ResponseWriter,
 	status int,
-	data interface{},
+	data envelope,
 	headers http.Header,
 ) error {
-	json, err := json.Marshal(data)
+	json, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err
 	}
