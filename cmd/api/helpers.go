@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type envelope map[string]interface{}
@@ -48,7 +49,12 @@ func (app *application) readJSON(
 	r *http.Request,
 	destination interface{},
 ) error {
-	err := json.NewDecoder(r.Body).Decode(destination)
+	maxBytes := 1_048_576
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	err := decoder.Decode(destination)
 	if err != nil {
 		var (
 			syntaxError           *json.SyntaxError
@@ -76,11 +82,22 @@ func (app *application) readJSON(
 			)
 		case errors.Is(err, io.EOF):
 			return errors.New("body must not be empty")
+
+		case strings.HasPrefix(err.Error(), "json: unknown field "):
+			fieldName := strings.TrimPrefix(err.Error(), "json: uknown field")
+			return fmt.Errorf("body contains unknown key %s", fieldName)
+		case err.Error() == "http: request body too large":
+			return fmt.Errorf("body must not be larger than %d bytes", maxBytes)
 		case errors.As(err, &invalidUnmarshalError):
 			panic(err)
 		default:
 			return err
 		}
+	}
+
+	err = decoder.Decode(&struct{}{})
+	if err != io.EOF {
+		return errors.New("body must only contain a single JSON value")
 	}
 	return nil
 }
