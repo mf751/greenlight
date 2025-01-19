@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/lib/pq"
@@ -53,7 +54,34 @@ RETURNING id, created_at, version
 }
 
 func (model *MovieModel) Get(id int64) (*Movie, error) {
-	return nil, nil
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+	sqlStatement := `
+SELECT id, created_at, title, year, runtime, genres, version
+FROM movies
+WHERE id = $1;
+  `
+	var movie Movie
+	err := model.DB.QueryRow(sqlStatement, id).Scan(
+		&movie.ID,
+		&movie.CreatedAt,
+		&movie.Title,
+		&movie.Year,
+		&movie.Runtime,
+		pq.Array(&movie.Genres),
+		&movie.Version,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &movie, nil
 }
 
 func (model *MovieModel) Update(movie *Movie) error {
