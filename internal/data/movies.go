@@ -1,7 +1,10 @@
 package data
 
 import (
+	"database/sql"
 	"time"
+
+	"github.com/lib/pq"
 
 	"github.com/mf751/greenlight/internal/validator"
 )
@@ -31,4 +34,32 @@ func ValidateMovie(v *validator.Validator, movie *Movie) {
 	v.Check(len(movie.Genres) > 0, "genres", "must contain at least 1 genre")
 	v.Check(len(movie.Genres) <= 5, "genres", "must not contain more than 5 genres")
 	v.Check(validator.Unique(movie.Genres), "genres", "must not contain duplicate values")
+}
+
+type MovieModel struct {
+	DB *sql.DB
+}
+
+func (model MovieModel) Insert(movie *Movie) error {
+	sqlStatement := `
+INSERT INTO movies (title, year, runtime, genres)
+VALUES ($1, $2, $3, $4)
+RETURNING id, created_at, version
+  `
+	args := []interface{}{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
+
+	return model.DB.QueryRow(sqlStatement, args...).
+		Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
+}
+
+func (model *MovieModel) Get(id int64) (*Movie, error) {
+	return nil, nil
+}
+
+func (model *MovieModel) Update(movie *Movie) error {
+	return nil
+}
+
+func (model *MovieModel) Delete(id int64) error {
+	return nil
 }
