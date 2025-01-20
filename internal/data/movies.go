@@ -88,7 +88,7 @@ func (model *MovieModel) Update(movie *Movie) error {
 	sqlStatement := `
 UPDATE movies
 SET title = $1, year = $2, runtime = $3, genres = $4, version = version + 1
-WHERE id = $5
+WHERE id = $5 AND version = $6
 RETURNING version
   `
 	args := []interface{}{
@@ -97,9 +97,19 @@ RETURNING version
 		movie.Runtime,
 		pq.Array(movie.Genres),
 		movie.ID,
+		movie.Version,
 	}
 
-	return model.DB.QueryRow(sqlStatement, args...).Scan(&movie.Version)
+	err := model.DB.QueryRow(sqlStatement, args...).Scan(&movie.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+	return nil
 }
 
 func (model *MovieModel) Delete(id int64) error {
