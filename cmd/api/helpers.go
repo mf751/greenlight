@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
+
+	"github.com/mf751/greenlight/internal/validator"
 )
 
 type envelope map[string]interface{}
@@ -103,4 +106,45 @@ func (app *application) readJSON(
 		return errors.New("body must only contain a single JSON value")
 	}
 	return nil
+}
+
+func (app *application) readString(queryString url.Values, key, defaultValue string) string {
+	s := queryString.Get(key)
+	if s == "" {
+		return defaultValue
+	}
+	return s
+}
+
+func (app *application) readCSV(
+	queryString url.Values,
+	key string,
+	defaultValue []string,
+) []string {
+	csv := queryString.Get(key)
+	if csv == "" {
+		return defaultValue
+	}
+
+	return strings.Split(csv, ",")
+}
+
+func (app *application) readInt(
+	queryString url.Values,
+	key string,
+	defaultValue int,
+	v *validator.Validator,
+) int {
+	s := queryString.Get(key)
+	if s == "" {
+		return defaultValue
+	}
+
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		v.AddError(key, "must be an integer value")
+		return defaultValue
+	}
+
+	return i
 }
