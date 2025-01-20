@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -48,8 +49,10 @@ VALUES ($1, $2, $3, $4)
 RETURNING id, created_at, version
   `
 	args := []interface{}{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-	return model.DB.QueryRow(sqlStatement, args...).
+	return model.DB.QueryRowContext(ctx, sqlStatement, args...).
 		Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
 }
 
@@ -63,7 +66,10 @@ FROM movies
 WHERE id = $1;
   `
 	var movie Movie
-	err := model.DB.QueryRow(sqlStatement, id).Scan(
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := model.DB.QueryRowContext(ctx, sqlStatement, id).Scan(
 		&movie.ID,
 		&movie.CreatedAt,
 		&movie.Title,
@@ -99,8 +105,10 @@ RETURNING version
 		movie.ID,
 		movie.Version,
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-	err := model.DB.QueryRow(sqlStatement, args...).Scan(&movie.Version)
+	err := model.DB.QueryRowContext(ctx, sqlStatement, args...).Scan(&movie.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -121,8 +129,10 @@ func (model *MovieModel) Delete(id int64) error {
 DELETE FROM movies
 WHERE id = $1;
   `
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-	result, err := model.DB.Exec(sqlStatement, id)
+	result, err := model.DB.ExecContext(ctx, sqlStatement, id)
 	if err != nil {
 		return err
 	}
