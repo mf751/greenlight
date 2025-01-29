@@ -73,7 +73,7 @@ func ValidatePasswordPlaintext(vdtr *validator.Validator, password string) {
 	vdtr.Check(len(password) <= 72, "password", "must not be more than 72 bytes long")
 }
 
-func ValidateUser(vdtr *validator.Validator, user User) {
+func ValidateUser(vdtr *validator.Validator, user *User) {
 	vdtr.Check(user.Name != "", "name", "must be provided")
 	vdtr.Check(len(user.Name) <= 500, "name", "must not be more than 500 bytes long")
 
@@ -99,7 +99,7 @@ RETURNING id, created_at, version
 	defer cancel()
 
 	err := model.DB.QueryRowContext(ctx, sqlQuery, args...).
-		Scan(&user.ID, user.CreatedAt, user.Version)
+		Scan(&user.ID, &user.CreatedAt, &user.Version)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
