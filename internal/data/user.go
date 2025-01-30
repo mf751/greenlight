@@ -27,7 +27,7 @@ var (
 	AnonymousUser     = &User{}
 )
 
-func (user *User) isAnonymous() bool {
+func (user *User) IsAnonymous() bool {
 	return user == AnonymousUser
 }
 
