@@ -25,7 +25,7 @@ func (model PermissionModel) GetAllForUser(userID int64) (Permissions, error) {
 	sqlQuery := `
 SELECT permissions.code
 FROM permissions
-INNER JOIN users_permissions ON users_permissions.permission_id = permissions.permission_id
+INNER JOIN users_permissions ON users_permissions.permission_id = permissions.id
 INNER JOIN users ON users.id = users_permissions.user_id
 WHERE users.id = $1
   `
