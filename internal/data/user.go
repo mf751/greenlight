@@ -116,7 +116,7 @@ func (model UserModel) GetByEmail(email string) (*User, error) {
 	sqlQuery := `
 SELECT id, created_at, name, email, password_hash, activated, version
 FROM users
-WHERE email = $2
+WHERE email = $1
   `
 	var user User
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
