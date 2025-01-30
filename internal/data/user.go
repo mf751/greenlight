@@ -22,7 +22,14 @@ type User struct {
 	Version   int       `json:"-"`
 }
 
-var ErrDuplicateEmail = errors.New("duplicate email")
+var (
+	ErrDuplicateEmail = errors.New("duplicate email")
+	AnonymousUser     = &User{}
+)
+
+func (user *User) isAnonymous() bool {
+	return user == AnonymousUser
+}
 
 type UserModel struct {
 	DB *sql.DB
