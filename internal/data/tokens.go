@@ -84,9 +84,12 @@ func (model TokenModel) DeleteAllForUser(scope string, userID int64) error {
 DELETE FROM tokens
 WHERE scope = $1 AND user_id = $2
   `
+
+	args := []interface{}{scope, userID}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := model.DB.ExecContext(ctx, sqlQuery)
+	_, err := model.DB.ExecContext(ctx, sqlQuery, args...)
 	return err
 }
