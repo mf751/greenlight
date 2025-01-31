@@ -19,10 +19,11 @@ import (
 	"github.com/mf751/greenlight/internal/mailer"
 )
 
-const version = "1.0.0"
-
 // will be passed by the go build command
-var buildTime string
+var (
+	buildTime string
+	version   string
+)
 
 type config struct {
 	port int
