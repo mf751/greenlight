@@ -1,3 +1,9 @@
+include .envrc
+
+##====================================##
+#							Helpers
+##====================================##
+
 ## help: print this help message
 .PHONY: help
 help:
@@ -7,6 +13,10 @@ help:
 .PHONY: confirm
 confirm:
 	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
+
+##====================================##
+#							Development
+##====================================##
 
 ## run/api: run the cmd/api application
 .PHONY: run/api
@@ -29,3 +39,22 @@ db/up: confirm
 db/migration:
 	@echo 'Creating migrations files for ${name}...'
 	migrate create -seq -ext=.sql -dir=./migrations ${name}
+
+
+##====================================##
+#						Quality Control
+##====================================##
+
+## audit: tidy dependencies and format, vet and test all code
+.PHONY: audit
+audit:
+	@echo 'Tidying and verifying module dependencies...'
+	go mod tidy
+	go mod verify 
+	@echo 'Formating code...'
+	go fmt ./...
+	@echo 'Vetting code...'
+	go vet ./...
+	staticcheck ./...
+	@echo 'Running tests...'
+	go test -race -vet=off ./...

@@ -63,7 +63,7 @@ func (model TokenModel) New(userID int64, timeToLive time.Duration, scope string
 	}
 
 	err = model.Insert(token)
-	return token, nil
+	return token, err
 }
 
 func (model TokenModel) Insert(token *Token) error {

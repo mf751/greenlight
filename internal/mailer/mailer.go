@@ -41,6 +41,9 @@ func (mailer Mailer) Send(recipient, templateFile string, data interface{}) erro
 
 	plainBody := new(bytes.Buffer)
 	err = tmpl.ExecuteTemplate(plainBody, "plainBody", data)
+	if err != nil {
+		return err
+	}
 
 	htmlBody := new(bytes.Buffer)
 	err = tmpl.ExecuteTemplate(htmlBody, "htmlBody", data)
